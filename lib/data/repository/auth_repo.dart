@@ -37,24 +37,17 @@ class AuthRepo {
     }
   }
   Future<ResponseStatus> register({required String email, required String username, required String pwd}) async {
-    dynamic resData;
-    final res = await FirebaseFunctions.instance.httpsCallable('register').call({
-      'username': username,
-      'email': email,
-      'pwd': pwd,
-    });
+    dynamic resData = await chatApi.register(username, email, pwd);
 
-    ResponseStatus? resp = ParseServerCallResponseWithUid(res.data);
+    ResponseStatus? resp = ParseServerCallResponse(resData);
     return resp;
   }
   Future<ResponseStatus> completeRegister({required String username}) async {
     print('Register username');
     print(username);
-    final res = await FirebaseFunctions.instance.httpsCallable('completeregister').call({
-      'username': username,
-    });
+    final data = await chatApi.completeRegister(username, authToken: await FirebaseAuth.instance.currentUser!.getIdToken());
 
-    ResponseStatus? resp = ParseServerCallResponse(res.data);
+    ResponseStatus? resp = ParseServerCallResponse(data);
     return resp;
   }
 
@@ -71,18 +64,15 @@ class AuthRepo {
   }
 
   Future<ResponseStatus> registerToken({required String deviceName, required String token}) async {
-    final res = await FirebaseFunctions.instance.httpsCallable('registertoken').call({
-      'device_name': deviceName,
-      'token': token,
-    });
+    final data = await chatApi.registerToken(deviceName, token, authToken: await FirebaseAuth.instance.currentUser!.getIdToken());
 
-    ResponseStatus? resp = ParseServerCallResponse(res.data);
+    ResponseStatus? resp = ParseServerCallResponse(data);
     return resp;
   }
   Future<bool> isUserRegisterComplete(String uid) async {
-    final userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    //final userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
 
-    return userDoc.exists;
+    return chatApi.userExists(uid, authToken: await FirebaseAuth.instance.currentUser!.getIdToken());
   }
   Future<ResponseStatus> signOutFromGoogle() async {
     try {
@@ -135,6 +125,7 @@ class AuthRepo {
     }
   }
   Future<void> signOut() async {
+    print("sing out with firebase");
     await FirebaseAuth.instance.signOut();
   }
 
@@ -142,19 +133,29 @@ class AuthRepo {
 
   //returns null if username is not registered
   Future<String?> recvUidByUsername(String username) async {
-    final res = await FirebaseFirestore.instance.collection('usernames').doc(username).get();
-    if (res.exists) {
-      return res.data()!['user_id'];
+    //final res = await FirebaseFirestore.instance.collection('usernames').doc(username).get();
+    final res = await chatApi.recvUid(username);
+
+    final resp = ParseServerCallResponse(res);
+
+    if (resp.code == ResponseCode.Success) {
+      return resp.obj['user_id'];
     }
 
     return null;
   }
 
   Future<ChatUser?> recvUserByUid(String uid) async {
-    final res = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    //final res = await FirebaseFirestore.instance.collection('users').doc(uid).get();
 
-    if (res.exists && res.data() != null){
-      final data = res.data();
+    final res = await chatApi.recvUser(uid, authToken: await FirebaseAuth.instance.currentUser!.getIdToken());
+
+    var resp = ParseServerCallResponse(res);
+
+    //if (res.exists && res.data() != null){
+    if (resp.code == ResponseCode.Success) {
+      print('Received user ' + resp.msg);
+      final data = resp.obj;
       return ChatUser(username: data!['username'], uid: uid, email: data['email'], imgUrl: data['img_url']);
     } else {
       return null;

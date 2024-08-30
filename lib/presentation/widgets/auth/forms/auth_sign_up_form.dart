@@ -50,11 +50,17 @@ class _AuthSignUpFormState extends State<AuthSignUpForm> {
         print("Okay, registation finishes with " + success.toString());
         if (success) {
           print("Now try sign in");
+          var avatarsRepo = context.read<AvatarsRepo>();
           context.read<AuthCubit>().trySignIn(
             _enteredEmail,
             _enteredPwd,
             newOnSignIn: (ChatUser u) async {
-              await context.read<AvatarsRepo>().updateAvatar(img: _pickedImage!);
+              print("UPDATING AVATAR");
+              print("Img " + _pickedImage.toString());
+              print("Img " + _pickedImage!.path);
+              //var avatarsRepo = context.read<AvatarsRepo>();
+              //await context.read<AvatarsRepo>().updateAvatar(img: _pickedImage!);
+              await avatarsRepo.updateAvatar(img: _pickedImage!);
             }
           );
         }

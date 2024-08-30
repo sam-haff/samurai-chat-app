@@ -71,7 +71,7 @@ class _ChatMessagesState extends State<ChatMessages> {
               padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
               child: //ListView.builder(
               InfiniteList(
-                reverse: true,
+                reverse: true, // to load msgs when scrolled to the bottom, not top
                 debounceDuration: Duration(milliseconds: 20),
                 hasReachedMax: state.lastPage,
                 isLoading: state.status == ChatStatus.loadingHistory,
@@ -86,7 +86,7 @@ class _ChatMessagesState extends State<ChatMessages> {
                     
                     return Message(
                         username: msg.fromUsername,
-                        isFirst: idx == (msgs.length() - 1) || (idx > 0 && nextMsg!.from.compareTo(msgs.reverseAt(idx).from) != 0),
+                        isFirst: idx == (msgs.length() - 1) || (idx >= 0 && nextMsg!.from.compareTo(msgs.reverseAt(idx).from) != 0),
                         isMy: msg.from.compareTo(FirebaseAuth.instance.currentUser!.uid) == 0 ,
                         userAvatarUrl: msg.imgUrl,
                         msg: msg.msg

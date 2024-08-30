@@ -280,7 +280,7 @@ exports.register = functions.https.onCall(async (data,context) => {
     //const newUsernameRef = firestore.collection('usernames').doc(username);
 
 
-    
+   //// FIRST CHECK IF EXISTS STUPIDO 
 
     var user = null;
     try {

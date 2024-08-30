@@ -36,7 +36,9 @@ class AuthCubit extends Cubit<AuthState> {
           final registerComplete = user.username.isNotEmpty; 
           print("!!!!!!!!!!! GOT CHANGE " + registerComplete.toString());
           if (registerComplete) {
+            print("register complete");
             if (onSignIn != null) {
+              print("on sign in call");
               onSignIn!(user);
             }
 
@@ -136,6 +138,8 @@ class AuthCubit extends Cubit<AuthState> {
       emit(state.copyWith(status: AuthStatus.None, errorStatus: resp));
       return false;
     } else {
+      emit(state.copyWith(status: AuthStatus.SignedIn));
+
       final notsResp = await registerNotificationsToken();
 
       return true;
@@ -165,6 +169,7 @@ class AuthCubit extends Cubit<AuthState> {
     
     //TODO: is it to be hidden in auth repo sign out?
     if (authRepo.isAuthenticatedWithGoogle()) {
+      print("auth with google, signt out with google");
       await authRepo.signOutFromGoogle();
     }
     await authRepo.signOut();
