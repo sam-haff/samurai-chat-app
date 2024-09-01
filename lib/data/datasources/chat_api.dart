@@ -7,4 +7,8 @@ abstract class ChatApi {
   Future<dynamic> recvUid(String username, {String? authToken});
   Future<dynamic> updateAvatar(String imgUrl, {String? authToken});
 
+  Future<dynamic> sendMessage(String toUID, String text, {String? authToken});
+
+  Future<dynamic> getChatHistory(String withUID, {int? before, int? limit, String? authToken});
+
 }

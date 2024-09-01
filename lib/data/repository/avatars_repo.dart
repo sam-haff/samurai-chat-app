@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:chat_app/data/datasources/firebase/fb_chat_api.dart';
+import 'package:chat_app/data/datasources/inhouse/ih_chat_api.dart';
 import 'package:chat_app/data/repository/server_codes.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,7 +10,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 const DummyAvatarImgUrl = 'https://firebasestorage.googleapis.com/v0/b/chat-app-67931.appspot.com/o/dummy.jpg?alt=media&token=f7f42329-e308-4f6e-9de7-2d9df417f0d4';
 
 class AvatarsRepo{
-  final chatApi = FbChatApi();
+  final chatApi = IhChatApi();//FbChatApi();
   Future<ResponseStatus> uploadAvatar({required File img}) async {
     print("upload avatar");
     final fbAuth = FirebaseAuth.instance;
@@ -46,7 +47,7 @@ class AvatarsRepo{
       //final avaUpdateRes = await FirebaseFunctions.instance.httpsCallable('updateavatar').call({
        // 'img_url': uploadResp.url,
       //});
-      final res = await chatApi.updateAvatar(uploadResp.url!);
+      final res = await chatApi.updateAvatar(uploadResp.url!, authToken: await FirebaseAuth.instance.currentUser!.getIdToken());
       print("AVATAR CHECK UP 2");
       final resp = ParseServerCallResponse(res);
 

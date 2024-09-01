@@ -14,7 +14,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 class AuthRepo {
   bool useFirebase = true;
 
-  ChatApi chatApi = FbChatApi();
+  ChatApi chatApi = IhChatApi();//FbChatApi();
 
   ChatUser? currentUser;
   Stream<ChatUser?> authStateChanges() async*{

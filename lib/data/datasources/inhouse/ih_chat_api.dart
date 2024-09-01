@@ -7,7 +7,7 @@ import 'package:http/http.dart';
 
 class IhChatApi extends ChatApi{
   //var client = HttpClient();
-  final apiServer = "127.0.0.1";//:8080";
+  final apiServer = "10.0.2.2";//"127.0.0.1";//:8080";
   int apiPort = 8080;
   void init() {}
 
@@ -35,7 +35,7 @@ class IhChatApi extends ChatApi{
       "Content-Type": "application/json"
     };
 
-    var resp = await post(getApiUri("/register"), headers: headers, body: body);
+    var resp = await post(getApiUri("/register"), headers: headers, body: jsonEncode(body));
 
     return jsonDecode(resp.body);    
   }
@@ -54,7 +54,7 @@ class IhChatApi extends ChatApi{
       "token": token
     };
 
-    var resp = await post(getApiUri("/registertoken"), body: body, headers: headers);
+    var resp = await post(getApiUri("/registertoken"), body: jsonEncode(body), headers: headers);
 
     return jsonDecode(resp.body);
   }
@@ -73,7 +73,7 @@ class IhChatApi extends ChatApi{
       "username": username,
     };
 
-    var resp = await post(getApiUri("/completeregister"), body: body, headers: headers);
+    var resp = await post(getApiUri("/completeregister"), body: jsonEncode(body), headers: headers);
 
     return jsonDecode(resp.body);
   }
@@ -135,8 +135,28 @@ class IhChatApi extends ChatApi{
       "img_url": imgUrl,
     };
 
-    var resp = await post(getApiUri("/updateavatar"), body: body, headers: headers);
+    var resp = await post(getApiUri("/updateavatar"), body: jsonEncode(body), headers: headers);
 
     return jsonDecode(resp.body);
+  }
+
+  @override
+  Future<dynamic> sendMessage(String toUID, String text, {String? authToken}) async {
+    if (authToken == null) {
+      throw Exception("sendMessage requires auth");
+      return null;
+    }
+    
+    final headers = getApiAuthHeaders(authToken);
+   
+    final body = {
+      "to": toUID,
+      "text": text,
+    };
+
+    var resp = await post(getApiUri("/addmessage"), body: jsonEncode(body), headers: headers);
+
+    return jsonDecode(resp.body);
+
   }
 }

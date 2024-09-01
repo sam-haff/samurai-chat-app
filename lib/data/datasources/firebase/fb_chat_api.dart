@@ -64,4 +64,42 @@ class FbChatApi extends ChatApi {
     print("api update ava status " + avaUpdateRes.data.toString());
     return avaUpdateRes.data;
   }
+
+  @override
+  Future<dynamic> sendMessage(String toUID, String text, {String? authToken}) async {
+    final res = await FirebaseFunctions.instance.httpsCallable('addmessage').call({
+      'to': toUID,
+      'text': text,
+    }); 
+
+    return res.data;
+  }
+
+  @override
+
+//not bothering with unification here, because it yields additional O(n) work, which is against my rules
+//handle differencies with other apis in Repo code
+  @override
+  Future<dynamic> getChatHistory(String compositeKey, {int? before, int? limit, bool inverse=false, String? authToken}) async {
+    var snapshotQ = before != null ?
+      FirebaseFirestore.instance
+              .collection('chats')
+              .doc(compositeKey)
+              .collection('msgs')
+              .where('created_at', isLessThan: before)
+              .orderBy('created_at', descending: inverse)
+              :
+      FirebaseFirestore.instance
+              .collection('chats')
+              .doc(compositeKey)
+              .collection('msgs')
+              .orderBy('created_at', descending: inverse);
+    if (limit != null) {
+      snapshotQ =  snapshotQ.limit(limit);
+    }
+    
+    final snapshot = await snapshotQ.get();
+
+    return snapshot.docs;
+  }
 }

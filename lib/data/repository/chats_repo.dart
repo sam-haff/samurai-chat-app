@@ -1,3 +1,4 @@
+import 'package:chat_app/data/datasources/inhouse/ih_chat_api.dart';
 import 'package:chat_app/data/repository/server_codes.dart';
 import 'package:chat_app/models/chat_message.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -13,6 +14,7 @@ class NewMessages {
 }
 
 class ChatsRepo {
+  var chatApi = IhChatApi();
   ChatMessage parseChatMessage(dynamic data) {
     return ChatMessage(
       from: data['from'] as String,
@@ -24,12 +26,13 @@ class ChatsRepo {
     );
   }
   Future<ResponseStatus> sendMessage(String to, String msg) async {
-    final res = await FirebaseFunctions.instance.httpsCallable('addmessage').call({
-      'to': to,
-      'text': msg,
-    });
+    //final res = await FirebaseFunctions.instance.httpsCallable('addmessage').call({
+    //  'to': to,
+    //  'text': msg,
+    //});
+    final res = await chatApi.sendMessage(to, msg);
 
-    ResponseStatus? resp = ParseServerCallResponseWithUid(res.data);
+    ResponseStatus? resp = ParseServerCallResponse(res);
     return resp;
   }
   static String createCompositeKey(String withId) {
