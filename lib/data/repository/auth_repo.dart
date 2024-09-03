@@ -134,7 +134,7 @@ class AuthRepo {
   //returns null if username is not registered
   Future<String?> recvUidByUsername(String username) async {
     //final res = await FirebaseFirestore.instance.collection('usernames').doc(username).get();
-    final res = await chatApi.recvUid(username);
+    final res = await chatApi.recvUid(username, authToken:  await FirebaseAuth.instance.currentUser!.getIdToken());
 
     final resp = ParseServerCallResponse(res);
 

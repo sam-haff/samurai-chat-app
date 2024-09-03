@@ -27,7 +27,7 @@ class _ChatMessagesState extends State<ChatMessages> {
 
   @override
   void initState() {
-    context.read<ChatCubit>().loadChat(ChatsRepo.createCompositeKey(widget.withContact.uid));
+    context.read<ChatCubit>().loadChat(widget.withContact.uid);
 
     SchedulerBinding.instance.addPostFrameCallback(
       (_) {
@@ -76,7 +76,7 @@ class _ChatMessagesState extends State<ChatMessages> {
                 hasReachedMax: state.lastPage,
                 isLoading: state.status == ChatStatus.loadingHistory,
                 onFetchData: () {
-                  context.read<ChatCubit>().fetchHistory(ChatsRepo.createCompositeKey(widget.withContact.uid));
+                  context.read<ChatCubit>().fetchHistory(widget.withContact.uid);
                 },
                 scrollController: _scrollController,
                   itemCount: msgs.length(),

@@ -47,7 +47,9 @@ class ChatCubit extends Cubit<ChatState> {
         }
       );
   }
-  void fetchHistory(String chatID) async {
+  void fetchHistory(String withUid) async {
+    String chatID = ChatsRepo.createCompositeKey(withUid);
+
     if (state.lastPage) {
       return;
     }
@@ -62,7 +64,7 @@ class ChatCubit extends Cubit<ChatState> {
     if (state.messages.initialPartition.isEmpty && state.messages.newPartition.isNotEmpty) {
       earliestTimestamp = state.messages.newPartition.first.timestamp;
     }
-    final msgs = await chatsRepo.loadChatPage(chatID, pageSize: 20, beforeTimestamp: earliestTimestamp, inverse: true);
+    final msgs = await chatsRepo.loadChatPage(withUid, pageSize: 20, beforeTimestamp: earliestTimestamp, inverse: true);
     chatsCacheRepo.cacheHistoryPage(chatID, msgs);
 
     emit(state.copyWith(
@@ -71,17 +73,22 @@ class ChatCubit extends Cubit<ChatState> {
       status: ChatStatus.loaded,
     )); 
   }
-  Future<void> loadChat(String chatID) async {
+  Future<void> loadChat(String withUid) async {
+    final chatID = ChatsRepo.createCompositeKey(withUid);
+
     emit(state.copyWith(chatID: chatID, messages: ChatMessagesList.empty(), status: ChatStatus.loading, lastPage: false));
     ChatMessagesList? msgs = chatsCacheRepo.loadChat(chatID);
 
     if (msgs != null) {
       emit(state.copyWith(messages: msgs, status: ChatStatus.loaded, chatID: chatID));
 
+      print("loadChat len " + msgs.initialPartition.length.toString());
+      print("loadChat len " + msgs.newPartition.length.toString());
+
       _listenToNewMsgs(chatID, msgs.lastTimestamp()!);
       return;
     }
-    List<ChatMessage> history = await chatsRepo.loadChatPage(chatID, pageSize: 20, inverse: true);//await chatsRepo.loadChat(chatID);
+    List<ChatMessage> history = await chatsRepo.loadChatPage(withUid, pageSize: 20, inverse: true);//await chatsRepo.loadChat(chatID);
     chatsCacheRepo.cacheChatInitial(chatID, history);
     emit(state.copyWith(messages: ChatMessagesList(initialPartition: history, newPartition: []), status: ChatStatus.loaded));
 

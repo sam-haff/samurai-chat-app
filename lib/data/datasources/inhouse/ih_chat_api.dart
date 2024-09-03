@@ -159,4 +159,30 @@ class IhChatApi extends ChatApi{
     return jsonDecode(resp.body);
 
   }
+
+  @override
+
+  Future<dynamic> getChatHistory(String withUid, {int? before, int? limit, bool inverse=false, String? authToken}) async {
+    if (authToken == null) {
+      throw Exception("getChatHistory requires auth");
+      return null;
+    }
+    
+    final headers = getApiAuthHeaders(authToken);
+    const int intMaxValue = 9007199254740991; // TODO: check if mongo can work in64
+    final body = {
+      "with": withUid,
+      "before_timestamp": before ?? intMaxValue,
+      "limit": limit ?? 10000, // TODO: change default,
+      "inverse": false,
+    };
+
+    var resp = await post(getApiUri("/chat"), body: jsonEncode(body), headers: headers);
+
+    print("why");
+    print("Chat resp " + resp.statusCode.toString());
+
+    return jsonDecode(resp.body);
+
+  }
 }
