@@ -25,27 +25,36 @@ class NewMessagesStreamWithController {
   Stream<NewMessages> stream;
 }
 
-ChatsRepo? chatsRepoPointer; // unfortunetely it's a requirement for fcm handler to be a top context function(cant be inside a class)
+ChatsRepo? chatsRepoPointer; // unfortunetely it's a requirement for a bg fcm handler to be a top context function(cant be inside a class)
 
 @pragma('vm:entry-point')
   Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+    chatsRepoPointer!.ack = true;
+    print("process msg");
     if (chatsRepoPointer == null) {
       return;
     }
- //   await Firebase.initializeApp(); // TODO: do we need it there? dont think so
-    
-    ChatMessage msg = ChatMessage(from: message.data["from"], to: message.data["to"], msg: message.data["msg"], fromUsername: message.data["username"], imgUrl: message.data["img_url"], timestamp: int.parse(message.data["created_at"]));
-    final chatID = ChatsRepo.createCompositeKey(msg.from);
 
+    final isMsg = int.parse(message.data["is_msg"]);
+    if (isMsg != 1){
+      return;
+    }
+
+    ChatMessage msg = ChatMessage(from: message.data["_from"], to: message.data["to"], msg: message.data["msg"], fromUsername: message.data["username"], imgUrl: message.data["img_url"], timestamp: int.parse(message.data["created_at"]));
+    final chatID = ChatsRepo.createCompositeKey2(msg.to, msg.from);
+    print(chatsRepoPointer!.chatStreams.keys);
+    print(chatID);
     if (chatsRepoPointer!.chatStreams.keys.contains(chatID)) {
       final stream = chatsRepoPointer!.chatStreams[chatID];
       NewMessages newMessages = NewMessages(messages: [msg]);
       stream!.controller.add(newMessages);
+      print("put new msg to stream");
     }    
     print("New message arrived! From " + msg.from);
   }
 
 class ChatsRepo {
+  bool ack = false;
   var chatApi = IhChatApi();
 
   Map<String, NewMessagesStreamWithController> chatStreams = {};
@@ -53,7 +62,9 @@ class ChatsRepo {
   ChatsRepo() {
     if (chatApi is IhChatApi) {
       chatsRepoPointer = this;
+      
       FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+      FirebaseMessaging.onMessage.listen(_firebaseMessagingBackgroundHandler);
     }
   }
   
@@ -72,6 +83,7 @@ class ChatsRepo {
     //  'to': to,
     //  'text': msg,
     //});
+    print("Check ack " + ack.toString());
     final res = await chatApi.sendMessage(to, msg, authToken: await FirebaseAuth.instance.currentUser!.getIdToken());
 
     ResponseStatus? resp = ParseServerCallResponse(res);
@@ -79,6 +91,13 @@ class ChatsRepo {
   }
   static String createCompositeKey(String withId) {
     List<String> ids = [FirebaseAuth.instance.currentUser!.uid, withId];
+    ids.sort();
+    String compositeKey = ids[0] + ids[1];
+
+    return compositeKey;
+  }
+  static String createCompositeKey2(String uid1, String uid2) {
+    List<String> ids = [uid1, uid2];
     ids.sort();
     String compositeKey = ids[0] + ids[1];
 
@@ -170,7 +189,13 @@ class ChatsRepo {
       if (resp.code != ResponseCode.Success) {
         return []; // should also handle not succesful case for FB version, since security rules can not allow the query
       } else {
+        if (resp.obj == null) {
+          return [];
+        }
         final msgs = List<Map<String, dynamic>>.from(resp.obj);
+        if (msgs == null) {
+          return [];
+        }
         print("Chat history with " + withUid);
         print(resp.obj);
         print(msgs);

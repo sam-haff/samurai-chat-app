@@ -29,6 +29,7 @@ class ChatCubit extends Cubit<ChatState> {
     }
     newMsgsSub = chatsRepo.chatOnlyNew(chatID, afterTimestamp: afterTimestamp).listen(
         (NewMessages m) {
+          print("chat cubit new message");
           //new partition handling
 
           if (m.initial != null) {
