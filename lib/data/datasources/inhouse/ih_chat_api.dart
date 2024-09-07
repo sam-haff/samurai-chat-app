@@ -7,12 +7,12 @@ import 'package:http/http.dart';
 
 class IhChatApi extends ChatApi{
   //var client = HttpClient();
-  final apiServer = "10.0.2.2";//"127.0.0.1";//:8080";
-  int apiPort = 8080;
+  final apiServer = "fastaisolutions.com";//"10.0.2.2";//"127.0.0.1";
+  int apiPort = 443;
   void init() {}
 
   Uri getApiUri(String path) {
-    return Uri(scheme: "http", host: apiServer, port: apiPort, path: path);
+    return Uri(scheme: "https", host: apiServer, port: apiPort, path: path);
   }
 
   Map<String, String> getApiAuthHeaders(String auth) {

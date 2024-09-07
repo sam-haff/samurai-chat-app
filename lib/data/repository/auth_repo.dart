@@ -9,6 +9,7 @@ import 'package:chat_app/models/chat_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthRepo {
@@ -97,7 +98,9 @@ class AuthRepo {
         idToken: googleAuth?.idToken,
       );
 
-      
+            
+      await FirebaseMessaging.instance.deleteToken();
+
       final userCreds = await FirebaseAuth.instance.signInWithCredential(credential);
       
       if (userCreds.user == null) {
@@ -112,6 +115,9 @@ class AuthRepo {
   Future<ResponseStatus> signIn({required String email, required String pwd}) async {
     try {
       print("trying sign in");
+
+      await FirebaseMessaging.instance.deleteToken();
+
       final userCreds = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email, password: pwd);
 
@@ -126,6 +132,8 @@ class AuthRepo {
   }
   Future<void> signOut() async {
     print("sing out with firebase");
+    
+    await FirebaseMessaging.instance.deleteToken(); // HANDLING OF SAME DEVICE/MULTIPLE USERs // TODO: we do the same(?) thing at the start of the app
     await FirebaseAuth.instance.signOut();
   }
 

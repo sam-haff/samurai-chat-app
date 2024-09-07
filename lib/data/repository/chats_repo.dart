@@ -9,6 +9,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:rxdart/rxdart.dart';
 
 
 class NewMessages {
@@ -27,6 +28,8 @@ class NewMessagesStreamWithController {
 
 ChatsRepo? chatsRepoPointer; // unfortunetely it's a requirement for a bg fcm handler to be a top context function(cant be inside a class)
 
+// We do this for ih chat api because we can't have native listeners for new messages as when we were working with firebase
+// One could consider using direct tcp connection/stream with mongo db watch on the server but that's unfeasible from the resources POV(client/server/mongo, all stages)
 @pragma('vm:entry-point')
   Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     chatsRepoPointer!.ack = true;
@@ -34,7 +37,7 @@ ChatsRepo? chatsRepoPointer; // unfortunetely it's a requirement for a bg fcm ha
     if (chatsRepoPointer == null) {
       return;
     }
-
+    print(message.data);
     final isMsg = int.parse(message.data["is_msg"]);
     if (isMsg != 1){
       return;
@@ -257,7 +260,7 @@ Stream<NewMessages> _fbChatOnlyNew(String compositeKey, {int? afterTimestamp}) a
     if (chatStreams.keys.contains(compositeKey)) {
       stream = chatStreams[compositeKey]!.stream;
     } else {
-      var controller = StreamController<NewMessages>();
+      var controller = BehaviorSubject<NewMessages>(); // TODO: mb we can just always create new simple streams(with deleting the old ones obv) //StreamController<NewMessages>();
       stream = controller.stream;
       chatStreams[compositeKey] = NewMessagesStreamWithController(controller, stream); // TODO: save controller also to be able to close streams(for example if chat is deleted) 
     }
